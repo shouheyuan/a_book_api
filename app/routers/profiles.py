@@ -14,13 +14,15 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = None
     signature: Optional[str] = None
     gender: Optional[str] = None
+    age: Optional[str] = None
+    preferences: Optional[str] = None
     avatar_url: Optional[str] = None
     avatarUrl: Optional[str] = None
 
 @router.get("/profiles/me")
 def get_profile(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     row = db.execute(text(
-        "SELECT id, email, nickname, bio, signature, gender, avatar_url, coin_balance, monthly_coin_balance, is_vip, vip_expires_at, created_at FROM user_profiles WHERE id = :id"
+        "SELECT id, email, nickname, bio, signature, gender, age, preferences, avatar_url, coin_balance, monthly_coin_balance, is_vip, vip_expires_at, created_at FROM user_profiles WHERE id = :id"
     ), {"id": user_id}).fetchone()
     # Serialize datetime to standard string format
     result = dict(row._mapping)
@@ -39,6 +41,8 @@ def update_profile(body: ProfileUpdate, user_id: str = Depends(get_current_user_
     if body.bio is not None: fields["bio"] = body.bio
     if body.signature is not None: fields["signature"] = body.signature
     if body.gender is not None: fields["gender"] = body.gender
+    if body.age is not None: fields["age"] = body.age
+    if body.preferences is not None: fields["preferences"] = body.preferences
     if body.avatar_url is not None: fields["avatar_url"] = body.avatar_url
     if body.avatarUrl is not None: fields["avatar_url"] = body.avatarUrl
 
