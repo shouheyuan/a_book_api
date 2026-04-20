@@ -1,4 +1,4 @@
-def build_optimize_prompt(user_info: dict, original_text: str, params: dict) -> list:
+def build_optimize_prompt(user_info: dict, original_text: str, params: dict, source_language: str = "zh-Hans") -> list:
     style = params.get("style", "常规优化")
     
     # 示例化用户预留信息（可通过 user_id 从 DB 加载 user_persona 等信息）
@@ -8,7 +8,9 @@ def build_optimize_prompt(user_info: dict, original_text: str, params: dict) -> 
 
     system_prompt = (
         f"你是一位首屈一指的资深全能文学编辑。你的任务是根据用户的需求对特定段落进行艺术重构。\n"
+        f"【原语种】：{source_language}\n"
         f"【改造目标】：将给定文本重构为『{style}』风格。\n"
+        f"【核心禁忌】：你输出的改文必须严格使用给定的【原语种】({source_language})进行创作，原汁原味！不要使用任何其他语言！\n"
         f"【约束条件】：保持原有剧情意图和语义逻辑，并且不要输出任何前后缀解释说明，只允许输出重构后的纯文本。\n"
         f"{user_context}"
     )

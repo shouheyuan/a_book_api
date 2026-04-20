@@ -39,17 +39,26 @@ def create_transaction(body: TransactionRequest, user_id: str = Depends(get_curr
     db.commit()
     return {"id": tx_id, "balance_after": new_balance}
 
+import os
+
+IS_DEV = os.environ.get("IS_DEV", "True").lower() == "true"
+
 class AppleVerifyRequest(BaseModel):
     transaction_id: str
     jws: str
 
 @router.post("/apple/verify")
 def verify_apple_receipt(body: AppleVerifyRequest, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    # Local decode for testing (Since we skip Apple Server verification locally)
     try:
-        payload = jwt.decode(body.jws, options={"verify_signature": False})
+        if IS_DEV:
+            # 开发环境：绕过苹果的正式公钥强签名校验，直接解包 Base64 提取 payload
+            payload = jwt.decode(body.jws, options={"verify_signature": False})
+        else:
+            # 生产环境：需要向苹果 App Store Server Request 或者加载苹果根证书进行严格的 verify_signature=True
+            # 这里留出正式接口占位，目前若强行验证会报错
+            raise HTTPException(status_code=500, detail="Production signature verification not yet implemented. Set IS_DEV=True")
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Invalid JWS format")
+        raise HTTPException(status_code=400, detail=f"Invalid JWS format: {str(e)}")
         
     product_id = payload.get("productId")
     if not product_id:

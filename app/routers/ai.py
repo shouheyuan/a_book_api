@@ -12,10 +12,10 @@ from app.db import get_db
 from app.core.auth import get_current_user_id
 from app.core.prompt_builder import build_optimize_prompt
 
-# Setup DeepSeek Client
-deepseek_client = AsyncOpenAI(
-    api_key=os.environ.get("DEEPSEEK_API_KEY", ""),
-    base_url="https://api.deepseek.com"
+# Setup Custom AI Client
+ai_client = AsyncOpenAI(
+    api_key=os.environ.get("NEW_API_KEY", ""),
+    base_url="http://180.184.59.27:18887/v1"
 )
 
 router = APIRouter()
@@ -26,22 +26,26 @@ class AIImageRecord(BaseModel):
     prompt: Optional[str] = None
     image_urls: Optional[List[str]] = []
     locator: Optional[dict] = None
+    source_language: Optional[str] = "zh-Hans"
 
 class AIRevisionRecord(BaseModel):
     book_identifier: Optional[str] = None
     paragraph_id: str
     original_text: str
     revised_versions: Optional[List[str]] = []
-    locator: Optional[dict] = None  # Added locator
+    locator: Optional[dict] = None
+    source_language: Optional[str] = "zh-Hans"
 
 class AIReviseGenerateRequest(BaseModel):
     original_text: str
     style: str
     params: Optional[dict] = {}
+    source_language: Optional[str] = "zh-Hans"
 
 class AIGenerateImageRequest(BaseModel):
     prompt: str
     size: Optional[str] = "2K"
+    source_language: Optional[str] = "zh-Hans"
 
 @router.post("/images/generate")
 async def generate_image(body: AIGenerateImageRequest, user_id: str = Depends(get_current_user_id)):
@@ -93,20 +97,41 @@ async def generate_revision(body: AIReviseGenerateRequest, user_id: str = Depend
     if body.params:
         params_for_prompt.update(body.params)
         
-    messages = build_optimize_prompt(mock_user_info, body.original_text, params_for_prompt)
+    messages = build_optimize_prompt(mock_user_info, body.original_text, params_for_prompt, body.source_language)
 
     # 3. 请求大模型 (流式)
     async def generate():
+        is_thinking = False
         try:
-            response = await deepseek_client.chat.completions.create(
-                model="deepseek-chat",
+            response = await ai_client.chat.completions.create(
+                model="Doubao-Seed-2.0-lite-32k",
                 messages=messages,
-                stream=True
+                stream=True,
+                extra_body={
+                    "thinking_type": "disabled"
+                }
             )
             async for chunk in response:
-                content = chunk.choices[0].delta.content
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta
+                content = getattr(delta, "content", None) or ""
+                
                 if content:
-                    yield {"data": content}
+                    if "<think>" in content:
+                        is_thinking = True
+                        content = content.replace("<think>", "")
+                    
+                    if "</think>" in content:
+                        is_thinking = False
+                        content = content.split("</think>")[-1]
+                    
+                    # 当前在包裹区域内时，清空 content 内容
+                    if is_thinking:
+                        content = ""
+                        
+                    if content:
+                        yield {"data": content}
         except Exception as e:
             yield {"event": "error", "data": str(e)}
 
