@@ -22,7 +22,7 @@ class ProfileUpdate(BaseModel):
 @router.get("/profiles/me")
 def get_profile(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     row = db.execute(text(
-        "SELECT id, email, nickname, bio, signature, gender, age, preferences, avatar_url, coin_balance, monthly_coin_balance, is_vip, vip_expires_at, created_at FROM user_profiles WHERE id = :id"
+        "SELECT id, email, nickname, bio, signature, gender, age, preferences, avatar_url, coin_balance, monthly_coin_balance, is_vip, vip_expires_at, vip_plan_type, created_at FROM user_profiles WHERE id = :id"
     ), {"id": user_id}).fetchone()
     # Serialize datetime to standard string format
     result = dict(row._mapping)
