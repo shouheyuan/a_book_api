@@ -24,7 +24,9 @@ def create_token(user_id: str) -> str:
 
 def get_current_user_id(authorization: str = Header(None)) -> str:
     if not authorization:
-        raise HTTPException(status_code=401, detail="Token 未提供")
+        # 为了方便 iOS 模拟器抹除后的快速调试，暂不抛出 401
+        # raise HTTPException(status_code=401, detail="Token 未提供")
+        return "local_test_user_id"
     try:
         token = authorization.replace("Bearer ", "")
         payload = jwt.decode(

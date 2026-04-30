@@ -100,12 +100,17 @@ async def generate_revision(body: AIReviseGenerateRequest, user_id: str = Depend
     messages = build_optimize_prompt(mock_user_info, body.original_text, params_for_prompt, body.source_language)
 
     # 3. 请求大模型 (流式)
+    temperature = 0.5
+    if body.params and "preset_creativity" in body.params:
+        temperature = max(0.0, min(1.0, float(body.params["preset_creativity"])))
+
     async def generate():
         is_thinking = False
         try:
             response = await ai_client.chat.completions.create(
                 model="Doubao-Seed-2.0-lite-32k",
                 messages=messages,
+                temperature=temperature,
                 stream=True,
                 extra_body={
                     "thinking_type": "disabled"
