@@ -22,7 +22,7 @@ This is the Python backend service for the `swift-toolkit` application. Built wi
 
 3. Run the development server:
    ```bash
-   python main.py
+   python main.py/
    # or
    uvicorn main:app --reload
    ```

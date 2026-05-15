@@ -1,0 +1,5 @@
+{
+  "error_character_id_required": "character_id is required for roleplay mode.",
+  "error_character_not_found": "Character not found.",
+  "error_internal_server": "Internal Server Error"
+}

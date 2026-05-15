@@ -1,0 +1,5 @@
+{
+  "error_character_id_required": "角色扮演模式需要提供 character_id 参数。",
+  "error_character_not_found": "未找到对应的角色。",
+  "error_internal_server": "服务器内部错误"
+}

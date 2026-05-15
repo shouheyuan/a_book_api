@@ -6,7 +6,7 @@ import os
 
 load_dotenv(override=True)
 
-from app.routers import auth, profiles, reading, annotations, books, ai, billing, collections, lore
+from app.routers import auth, profiles, reading, annotations, books, ai, billing, collections, lore, chat
 
 app = FastAPI(title="VisionNovel API", version="1.0", docs_url="/docs", redoc_url="/redoc")
 
@@ -31,6 +31,7 @@ app.include_router(ai.router,          prefix="/v1/ai",               tags=["AI"
 app.include_router(billing.router,     prefix="/v1/billing",          tags=["Billing"])
 app.include_router(collections.router, prefix="/v1/collections",      tags=["Collections"])
 app.include_router(lore.router,        prefix="/v1/lore-entities",    tags=["Lore"])
+app.include_router(chat.router,        prefix="/v1/chat",             tags=["Chat"])
 
 @app.get("/")
 def root():
